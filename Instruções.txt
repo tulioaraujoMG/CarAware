@@ -1,0 +1,2 @@
+./CarlaUE4.sh -opengl
+
