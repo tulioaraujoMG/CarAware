@@ -47,10 +47,10 @@ SIM_PARAMS = {}
 # ========== CONFIG DOS EPISÓDIOS DE SIMULAÇÃO ===========
 SIM_PARAMS["EPISODE_RESET"] = True  # Se True, faz o respawn aleatório a cada novo episódio
 SIM_PARAMS["SENSORS_BLACKOUT"] = False  # Se True, falha os sensores a cada X segundos, por Y segundos.
-SIM_PARAMS["MAP"] = "Gradual_Random"  # Mapa que será carregado na simulação. Ex.: Town01,Town02,Town10HD_Opt (só com ep. reset), Random,Gradual_Random
+SIM_PARAMS["MAP"] = "Town02"  # Mapa que será carregado na simulação. Ex.: Town01,Town02,Town10HD_Opt (só com ep. reset), Random,Gradual_Random
 SIM_PARAMS["RANDOM_MAPS"] = ["Town02", "Town10HD_Opt"]  # Mapas que serão selecionados randomicamente se MAP = "Random" ou "Gradual_Random"
-SIM_PARAMS["GRADUAL_RANDOM_INIT_EP_CHANGE"] = 6  # Número de episódios que irá rodar no início, antes de trocar o mapa
-SIM_PARAMS["GRADUAL_RANDOM_RATE"] = 2  # Tamanho do passo de redução do número de episódios que irá rodar antes de trocar o mapa
+SIM_PARAMS["GRADUAL_RANDOM_INIT_EP_CHANGE"] = 100  # Número de episódios que irá rodar no início, antes de trocar o mapa
+SIM_PARAMS["GRADUAL_RANDOM_RATE"] = 5  # Tamanho do passo de redução do número de episódios que irá rodar antes de trocar o mapa
 SIM_PARAMS["NUM_EPISODES"] = int(0)  # total de episódios que serão rodados (0 or less trains forever)
 SIM_PARAMS["EGO_VEHICLE_NUM"] = 1 # Número de Ego vehicles gerados na simulação
 SIM_PARAMS["NPC_VEHICLE_NUM"] = 0  # Número de NPC vehicles gerados na simulação
@@ -88,11 +88,12 @@ SIM_PARAMS["DEBUG"] = True  # Habilita exibição de informações de sensores n
 SIM_PARAMS["SCREEN_WIDTH"] = 1920  # 1920
 SIM_PARAMS["SCREEN_HEIGHT"] = 1020  # 1080
 SIM_PARAMS["CONFIG_FPS"] = 30  # Set this to the FPS of the environment
+SIM_PARAMS["KALMAN_FILTER"] = False  # Generates kalman filter outputs to compare with the prediction
 
 # ======================== CONFIG DO REINFORCEMENT LEARNING ===========================
-SIM_PARAMS["TRAIN_MODE"] = "Train"  # Define o modo de execução do RL: "Train", "Play" ou "Simulation"
+SIM_PARAMS["TRAIN_MODE"] = "Play"  # Define o modo de execução do RL: "Train", "Play" ou "Simulation"
 SIM_PARAMS["TRAIN_MODEL"] = "Latest"  # "Latest" ou "Nome do modelo" a ser utilizado.
-SIM_PARAMS["TRAIN_RESTART"] = True  # Se True, sobrescreve o modelo criado previamente, em False, continua treinamento
+SIM_PARAMS["TRAIN_RESTART"] = False  # Se True, sobrescreve o modelo criado previamente, em False, continua treinamento
 SIM_PARAMS["PREDICTION_PREVIEW"] = True  # Se True, desenha a previsão na visão Top-view
 SIM_PARAMS["PREDICTION_HUD"] = True  # Se True, insere informações de prediction no HUD
 SIM_PARAMS["LAST_POSITIONS_TRAINING"] = False  # Se True, passa as últimas 4 posições para a rede no treinamento
@@ -118,7 +119,7 @@ HYPER_PARAMS["num_epochs"] = int(4)  # Number of PPO training epochs per traning
 HYPER_PARAMS["batch_size"] = int(2048)  # Epoch batch size - Default: 32 / 2048 (funcionou) / 8192
 HYPER_PARAMS["synchronous"] = False  # Set this to True when running in a synchronous environment
 HYPER_PARAMS["action_smoothing"] = float(0.0)  #Action smoothing factor
-HYPER_PARAMS["model_name"] = "PPO_MODEL_step1_moving_1agent_reset_gradual_random_distnorm_noblackout_highstd_h32768_batch2048_lr1e4_epoch4_v1"  # Name of the model to train. Output written to models/model_name
+HYPER_PARAMS["model_name"] = "Scenario1play"  # Name of the model to train. Output written to models/model_name
 HYPER_PARAMS["reward_fn"] = "rw_distance_normalized"  # Reward Function to use. See reward_functions.py for more info.
 HYPER_PARAMS["seed"] = 0  # Seed to use. (Note that determinism unfortunately appears to not be guaranteed
                         # with this option in our experience)
@@ -479,7 +480,7 @@ if __name__ == '__main__':
         except:
             pass
 
-        os.startfile("C:\carla13\CarlaUE4.exe") # ABRE O CARLA
+        os.startfile("C:\carla\CarlaUE4.exe") # ABRE O CARLA
         time.sleep(5)
         #subprocess.call(["C:\carla13\CarlaUE4.exe","-fps=5"])
         result = main()
