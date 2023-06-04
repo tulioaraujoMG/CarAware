@@ -898,7 +898,7 @@ class MapImage(object):
 class World(object):
     """Class that contains all the information of a carla world that is running on the server side"""
 
-    def __init__(self, name):
+    def __init__(self, name, kalman_filter):
         self.new_episode = False
         self.client = None
         self.name = name
@@ -937,6 +937,9 @@ class World(object):
 
         # BOUNDING BOX DOS VEÍCULOS
         self.veh_bounding_box = {}
+
+        # Enables/Disables Kalman Filter plots
+        self.kalman_filter = kalman_filter
 
     def _get_data_from_carla(self):
         """Retrieves the data from the server side"""
@@ -1246,6 +1249,25 @@ class World(object):
             pass
             #print("Pred_NaN")
 
+    def _render_prediction_kalman(self, surface, all_veh, world_to_pixel):
+        # DESENHA OS DADOS RECEBIDOS PELO GNSS DE CADA VEÍCULO
+        try:
+            for vehicle in all_veh:
+                if vehicle.pred_kalman_x is not None and vehicle.pred_kalman_y is not None:
+                    #print(vehicle.prediction[0],vehicle.prediction[1])
+                    # CONVERTE A LOCALIZAÇÃO NO MUNDO REAL PARA PIXELS NO CARLA
+                    #print("prediction_Y: ", vehicle.prediction[1]+1)
+                    #print(carla.Location(x=vehicle.prediction[0], y=vehicle.prediction[1] + 1))
+                    location = world_to_pixel(carla.Location(x=float(vehicle.pred_kalman_x), y=float(vehicle.pred_kalman_y+1)))  # +1 é o offset de pos p/ exibição
+                    if vehicle.prediction_preview:
+                        # DESENHA PREDICTION NA VISÃO TOP-VIEW
+                        pygame.draw.circle(surface, COLOR_ORANGE_2, location, int(math.ceil(6.0 * self.map_image.scale)))
+                        #pygame.display.flip()
+                        #print(vehicle.pred_kalman_x, vehicle.pred_kalman_y)
+        except:
+            pass
+            #print("Pred_NaN")
+
     def _render_lidar(self, surface, all_veh, world_to_pixel):
         # DESENHA OS DADOS RECEBIDOS PELO LIDAR DE CADA VEÍCULO
 
@@ -1374,8 +1396,12 @@ class World(object):
         # Sensor LIDAR
         self._render_lidar(surface, all_veh, self.map_image.world_to_pixel)
 
-        # Prediction
+        # Prediction RL
         self._render_prediction(surface, all_veh, self.map_image.world_to_pixel)
+
+        # Prediction Kalman
+        if self.kalman_filter:
+            self._render_prediction_kalman(surface, all_veh, self.map_image.world_to_pixel)
 
     def clip_surfaces(self, clipping_rect):
         """Used to improve perfomance. Clips the surfaces in order to render only the part of the surfaces that are going to be visible"""
