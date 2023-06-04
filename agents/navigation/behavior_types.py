@@ -2,7 +2,7 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
 """ This module contains the different parameters sets for each behavior. """
-
+import random
 
 class Cautious(object):
     """Class for Cautious agent."""
@@ -34,4 +34,16 @@ class Aggressive(object):
     safety_time = 3
     min_proximity_threshold = 8
     braking_distance = 4
+    tailgate_counter = -1
+
+
+class Randomized(object):
+    """Class for Aggressive agent."""
+
+    max_speed = random.randrange(40,70,1)
+    speed_lim_dist = random.randrange(3,6,1)
+    speed_decrease = random.randrange(8,10,1)
+    safety_time = 3
+    min_proximity_threshold = random.randrange(10,12,1)
+    braking_distance = random.randrange(4,6,1)
     tailgate_counter = -1

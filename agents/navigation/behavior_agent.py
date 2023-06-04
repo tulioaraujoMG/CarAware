@@ -13,7 +13,7 @@ import numpy as np
 import carla
 from agents.navigation.basic_agent import BasicAgent
 from agents.navigation.local_planner import RoadOption
-from agents.navigation.behavior_types import Cautious, Aggressive, Normal
+from agents.navigation.behavior_types import Cautious, Aggressive, Normal, Randomized
 
 from agents.tools.misc import get_speed, positive, is_within_distance, compute_distance
 
@@ -61,6 +61,9 @@ class BehaviorAgent(BasicAgent):
 
         elif behavior == 'aggressive':
             self._behavior = Aggressive()
+
+        elif behavior == 'randomized':
+            self._behavior = Randomized()
 
     def _update_information(self):
         """
