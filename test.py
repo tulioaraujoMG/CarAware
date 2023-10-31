@@ -1,17 +1,17 @@
-sim_total_time = 11
+#sim_total_time = 11
 
-print(sim_total_time // 3600)
-print(sim_total_time % 3600 // 60)
-print(sim_total_time % 60)
+#print(sim_total_time // 3600)
+#print(sim_total_time % 3600 // 60)
+#print(sim_total_time % 60)
 
-import gym
-import numpy as np
-import tensorflow as tf
-import math
-import carla
-import random
-import time
-from time import sleep
+#import gym
+#import numpy as np
+#import tensorflow as tf
+#import math
+#import carla
+#import random
+#import time
+#from time import sleep
 
 '''
 #action_space = gym.spaces.Box(np.array([-1, 0]), np.array([1, 1]), dtype=np.float32)
@@ -154,6 +154,84 @@ finally:
     rt.stop()  # better in a try/finally block to make sure the program ends!
 
 '''
-ego_num = 2
-for veh in range(ego_num):
-  print(veh)
+#ego_num = 2
+#for veh in range(ego_num):
+  #print(veh)
+'''
+import numpy as np
+import random
+
+class KalmanFilter:
+    def __init__(self, dt, var_pos, var_acc):
+        self.dt = dt
+        self.var_pos = var_pos
+        self.var_acc = var_acc
+        self.A = np.array([[1, 0, dt, 0],
+                           [0, 1, 0, dt],
+                           [0, 0, 1, 0],
+                           [0, 0, 0, 1]])
+        self.H = np.array([[1, 0, 0, 0],
+                           [0, 1, 0, 0]])
+        self.Q = np.array([[dt**4/4, 0, dt**3/2, 0],
+                           [0, dt**4/4, 0, dt**3/2],
+                           [dt**3/2, 0, dt**2, 0],
+                           [0, dt**3/2, 0, dt**2]]) * var_acc
+        self.R = np.array([[var_pos, 0],
+                           [0, var_pos]])
+        self.x = np.zeros((4, 1))
+        self.P = np.eye(4)
+
+    def predict(self):
+        self.x = np.dot(self.A, self.x)
+        self.P = np.dot(np.dot(self.A, self.P), self.A.T) + self.Q
+
+    def update(self, z):
+        y = z - np.dot(self.H, self.x)
+        S = np.dot(np.dot(self.H, self.P), self.H.T) + self.R
+        K = np.dot(np.dot(self.P, self.H.T), np.linalg.inv(S))
+        self.x = self.x + np.dot(K, y)
+        self.P = np.dot(np.eye(4) - np.dot(K, self.H), self.P)
+
+    def run(self, z):
+        self.predict()
+        self.update(z)
+        return self.x[0], self.x[1]
+
+
+# Cria um objeto KalmanFilter
+dt = 0.1
+var_pos = 0.1
+var_acc = 1.0
+kf = KalmanFilter(dt, var_pos, var_acc)
+
+# Define a posição inicial e a aceleração inicial do veículo
+posX = random.uniform(-5, 5)
+posY = random.uniform(-5, 5)
+acelX = random.uniform(-2, 2)
+acelY = random.uniform(-2, 2)
+
+# Faz as medições e predições da posição do veículo
+for i in range(100):
+    # Simula a medição da posição
+    posX += acelX*dt**2/2 + random.gauss(0, var_pos)
+    posY += acelY*dt**2/2 + random.gauss(0, var_pos)
+    z = np.array([[posX], [posY]])
+
+    # Simula a aceleração do veículo
+    acelX += random.gauss(0, var_acc)
+    acelY += random.gauss(0, var_acc)
+
+    # Executa o filtro de Kalman para prever a posição do veículo
+    predX, predY = kf.run(z)
+
+    # Imprime a posição medida, a posição prevista e a aceleração atual
+    print(f"Medição: ({posX:.2f}, {posY:.2f}) - Predição: ({predX[0]:.2f}, {predY[0]:.2f}) - Aceleração: ({acelX:.2f}, {acelY:.2f})")
+
+'''
+import os
+csv_file = open(os.path.join("C:\\Users\\tulioaraujo\\PycharmProjects\\carla\\models\\PPO_MODEL_step5_moving_1agent_reset10_gradualrandom_distnorm_noblackout_highstd_h32768_batch2048_lr5e8_epoch4_v1\\", "training_log.csv"), "r")
+try:
+    data = [line.strip().split(';')[5] for line in csv_file.readlines()]
+except:
+    print("não existe")
+csv_file.close()

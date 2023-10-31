@@ -44,6 +44,7 @@ class SimulationSetup:
         self.vehicle_speed = sim_params["VEHICLE_SPEED"]
         self.vehicle_behavior = sim_params["VEHICLE_BEHAVIOR"]
         self.prediction_preview = sim_params["PREDICTION_PREVIEW"]
+        self.centralized_spawn = sim_params["CENTRALIZED_SPAWN"]
 
         self.rgb_mode = sens_params["RGB_MODE"]
         self.sens_obs = sens_params["SENS_OBS"]
@@ -133,13 +134,15 @@ class SimulationSetup:
         self.simulation_reset = False
         self.sim_total_time = 0
         self.sim_last_total_time = 0
+        self.eval = False  # Indica para o módulo top-view se está ocorrendo a fase de evaluation
+        self.ignored_spawn_number = 0
 
         # DEFINE VARIÁVEL QUE IRÁ CONTROLAR A SIMULAÇÃO
         self.simulation_status = None
 
         # RANDOM / GRADUAL RANDOM
         self.init_gradual_random_ep = self.gradual_random_init_ep_change
-        self.current_gradual_random_ep = self.gradual_random_init_ep_change+1
+        self.current_gradual_random_ep = self.gradual_random_init_ep_change#+1
         self.gradual_random_run_once = True
         self.chosen_random_map = ""
 
@@ -192,14 +195,14 @@ class SimulationSetup:
 
     # ======= CARREGA O MUNDO E CONFIGURA A SIMULAÇÃO =======
     def load_world(self):
-        if self.map == "Random":
+        if self.map == "Random":  # and self.simulation_reset == False:
             random_map = random.choice(self.random_maps)  # garante que o novo mapa é diferente
             while random_map == self.chosen_random_map:
                 random_map = random.choice(self.random_maps)
             chosen_map = random_map
             self.client.load_world(chosen_map, True)
             self.chosen_random_map = chosen_map
-        elif self.map == "Gradual_Random":
+        elif self.map == "Gradual_Random":  # and self.simulation_reset == True:
             if self.gradual_random_run_once:  # carrega o mapa apenas na primeira vez
                 random_map = random.choice(self.random_maps)  # garante que o novo mapa é diferente
                 while random_map == self.chosen_random_map:
@@ -208,15 +211,15 @@ class SimulationSetup:
                 self.client.load_world(chosen_map, True)
                 self.chosen_random_map = chosen_map
                 self.gradual_random_run_once = False
-            self.current_gradual_random_ep = self.current_gradual_random_ep-1
-            print(self.current_gradual_random_ep)
-            if self.current_gradual_random_ep == 0:  # rodou o número de episódios atual no mesmo mapa
+            if self.current_gradual_random_ep <= 0:  # rodou o número de episódios atual no mesmo mapa
                 random_map = random.choice(self.random_maps)  # garante que o novo mapa é diferente
                 while random_map == self.chosen_random_map:
                     random_map = random.choice(self.random_maps)
                 chosen_map = random_map
                 self.client.load_world(chosen_map, True)
                 self.chosen_random_map = chosen_map
+                self.current_gradual_random_ep = self.current_gradual_random_ep - 1
+                print(self.current_gradual_random_ep)
                 if self.init_gradual_random_ep-self.gradual_random_rate > 0:  # Decrementa o num. de episódios necessário para trocar de mapa
                     self.current_gradual_random_ep = self.init_gradual_random_ep-self.gradual_random_rate
                     self.init_gradual_random_ep = self.init_gradual_random_ep-self.gradual_random_rate
@@ -322,6 +325,7 @@ class SimulationSetup:
         self.vehicles_list = []
         self.ego_vehicle = []
         self.props_list = []
+        #self.simulation_reset = False
 
         # LIMPA O STACK DE IMAGENS
         if self.sens_rgb:
@@ -503,9 +507,11 @@ class SimulationSetup:
     def col_callback(self, col, veh_num):
 
         self.ego_vehicle[veh_num].sens_col = col
-        #print("Colisão:",col)
-        #self.simulation_reset = True
-        # print("Veículo ", veh_num, " COL: ", str(obs))  # print("Obstacle detected:\n" + str(obs) + '\n')
+        print("Colisão:", col)
+        print("Velocidade", self.ego_vehicle[veh_num].sens_spd_sas_speed)
+        if round(self.ego_vehicle[veh_num].sens_spd_sas_speed) == 0 and self.simulation_reset == False:  # reinicia o episódio se algum carro colidir e parar
+            self.simulation_reset = True
+            print("Veículo ", veh_num, " colidiu, reiniciando episódio.")
 
     def rgb_callback(self, rgb, veh_num):
 
@@ -838,7 +844,18 @@ class SimulationSetup:
         bp_vehicle = sorted(bp_vehicle, key=lambda bp: bp.id)
         bp_vehicle = random.choice(bp_vehicle)
         if spawn_ego:  # CRIA CARRO COMO EGO
-            transform = self.veh_spawn_points[veh_num]  # segue sequência que os carros forem criados, começando em veh_num[0]
+            if self.centralized_spawn and self.chosen_random_map == "Town02":  # Força o spawn na região central do mapa (por enquanto apenas na Town02)
+                while not ((43 < self.veh_spawn_points[veh_num + self.ignored_spawn_number].location.x < 138) and (187 < self.veh_spawn_points[veh_num + self.ignored_spawn_number].location.y < 237)):
+                    self.ignored_spawn_number += 1
+                    if self.ignored_spawn_number > len(self.veh_spawn_points):
+                        print("Não existem spawn points suficientes no centro do mapa. Desativar Centralized Spawn!")
+                        raise SystemExit(0)
+                transform = self.veh_spawn_points[
+                        veh_num + self.ignored_spawn_number]  # segue sequência que os carros forem criados, começando em veh_num[0]
+                self.ignored_spawn_number = 0
+            else:
+                transform = self.veh_spawn_points[veh_num]
+
         else:  # CRIA CARRO COMO NPC
             transform = self.veh_spawn_points[veh_num+self.ego_vehicle_num]  # pula os spawn points usados pelos EGO
 
@@ -928,6 +945,8 @@ class SimulationSetup:
             self.ego_vehicle[veh_num].sens_gnss_input = None
             self.ego_vehicle[veh_num].sens_lidar_input = None
             self.ego_vehicle[veh_num].prediction = None
+            self.ego_vehicle[veh_num].pred_kalman_x = None
+            self.ego_vehicle[veh_num].pred_kalman_y = None
             self.ego_vehicle[veh_num].pred_distance = None
             self.ego_vehicle[veh_num].prediction_preview = self.prediction_preview
             self.ego_vehicle[veh_num].last_value_gnss = []
@@ -1120,22 +1139,55 @@ class SimPause(object):
         self.settings = None
         self.traffic_manager = None
 
-    def start(self, simsetup):
+    def start(self, sim):
         """Assigns other initialized modules that input module needs."""
-        self._SimulationSetup = simsetup
-        self.settings = simsetup.world.get_settings()
-        self.traffic_manager = simsetup.traffic_manager
+        self._SimulationSetup = sim
+        self.settings = sim.world.get_settings()
+        self.traffic_manager = sim.traffic_manager
 
-    def pause(self):
+    def pause(self, sim):
         # CONFIGURA A SIMULAÇÃO/TRAFFIC_MANAGER EM MODO SÍNCRONO PARA PAUSAR A EXECUÇÃO DOS TESTES
-        self.settings.synchronous_mode = True
-        self.traffic_manager.set_synchronous_mode(True)
+        #self.settings.synchronous_mode = True
+        #self.settings.fixed_delta_seconds = 1.0 / 20
+        #self.traffic_manager.set_synchronous_mode(True)
+        #self._SimulationSetup.world.apply_settings(self.settings)
+        #self._SimulationSetup.world.tick()
+        for veh in sim.ego_vehicle:
+            veh.agent.set_target_speed(0)
+            #veh.apply_control(control)
+        for veh in sim.npc_vehicle:
+            veh.agent.set_target_speed(0)
+            #veh.apply_control(control)
 
-    def resume(self):
+    def resume(self, sim, sim_params):
         # CONFIGURA A SIMULAÇÃO/TRAFFIC_MANAGER EM MODO ASSÍNCRONO PARA RESUMIR A EXECUÇÃO DOS TESTES
-        self.settings.synchronous_mode = False
-        self.traffic_manager.set_synchronous_mode(False)
+        #self.settings.synchronous_mode = False
+        #self.settings.fixed_delta_seconds = 1.0 / 20
+        #self.traffic_manager.set_synchronous_mode(False)
+        #self._SimulationSetup.world.apply_settings(self.settings)
+        #self._SimulationSetup.world.tick()
+        speed = sim_params["VEHICLE_SPEED"]
+        behavior = sim_params["VEHICLE_BEHAVIOR"]
+        agent = sim_params["VEHICLE_AGENT"]
 
+        if agent == "BASIC" and speed == "Limit" and behavior == "randomized":
+            for veh in sim.ego_vehicle:
+                max_speed = random.randrange(40, 50, 1)
+                print(max_speed)
+                veh.agent.set_target_speed(max_speed)
+                #veh.apply_control(control)
+            for veh in sim.npc_vehicle:
+                max_speed = random.randrange(40, 50, 1)
+                print(max_speed)
+                veh.agent.set_target_speed(max_speed)
+                #veh.apply_control(control)
+        elif agent == "BASIC" and speed == "Limit" and behavior != "randomized":
+            for veh in sim.ego_vehicle:
+                veh.agent.set_target_speed(speed)
+            for veh in sim.npc_vehicle:
+                veh.agent.set_target_speed(speed)
+        else:
+            pass
 
 # CONFIGURA A VISÃO SUPERIOR DO MAPA
 class TopView(object):

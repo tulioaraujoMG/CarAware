@@ -138,11 +138,11 @@ class CarlaEnv(gym.Env):
 
         # ACT - Define limites de coordenadas para mapa escolhido
         if map == "Town01":
-            self.vetor_act_low = [-15, 90]  # Coordenadas X,Y
-            self.vetor_act_high = [210, 310]  # Coordenadas X,Y
+            self.vetor_act_low = [-20, -10]  #[-15, 90]  # Coordenadas X,Y
+            self.vetor_act_high = [410, 340]  #[210, 310]  # Coordenadas X,Y
         elif map == "Town02":
-            self.vetor_act_low = [-20, -10]  # Coordenadas X,Y
-            self.vetor_act_high = [410, 340]  # Coordenadas X,Y
+            self.vetor_act_low = [-15, 95]  # Coordenadas X,Y
+            self.vetor_act_high = [205, 315]  # Coordenadas X,Y
         elif map == "Town10HD_Opt":
             self.vetor_act_low = [-130, -90]  # Coordenadas X,Y
             self.vetor_act_high = [125, 155]  # Coordenadas X,Y

@@ -898,7 +898,7 @@ class MapImage(object):
 class World(object):
     """Class that contains all the information of a carla world that is running on the server side"""
 
-    def __init__(self, name, kalman_filter):
+    def __init__(self, name):
         self.new_episode = False
         self.client = None
         self.name = name
@@ -939,13 +939,13 @@ class World(object):
         self.veh_bounding_box = {}
 
         # Enables/Disables Kalman Filter plots
-        self.kalman_filter = kalman_filter
+        self.kalman_filter = False
 
     def _get_data_from_carla(self):
         """Retrieves the data from the server side"""
         try:
             self.client = carla.Client("localhost", 2000)
-            self.client.set_timeout(10)
+            self.client.set_timeout(30)
 
             world = self.client.get_world()
 
@@ -1216,7 +1216,7 @@ class World(object):
                     #print("GNSS_Y", vehicle.sens_gnss.location.y+1)
                     # CONVERTE A LOCALIZAÇÃO NO MUNDO REAL PARA PIXELS NO CARLA
                     location_carla = carla.Location(x=vehicle.sens_gnss.location.x,
-                                                             y=vehicle.sens_gnss.location.y + 1)
+                                                             y=vehicle.sens_gnss.location.y + 1, z=vehicle.sens_gnss.location.z)
                     location = world_to_pixel(location_carla)  # +1 é o offset de pos p/ exibição
                     # SALVA PONTOS GNSS PARA APRENDIZADO RN
                     vehicle.sens_gnss_input = location_carla

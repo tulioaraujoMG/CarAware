@@ -8,7 +8,7 @@ import tensorflow as tf
 import time
 from datetime import datetime
 
-from vae_common import create_encode_state_fn, load_vae
+#from vae_common import create_encode_state_fn, load_vae
 from ppo import PPO
 #from reward_functions import reward_functions
 from run_eval import run_eval
@@ -148,7 +148,7 @@ def train(hyper_params, sim_params, simulation, top_view):  # start_carla=True
     model.write_dict_to_summary("hyper-parameters", hyper_params, 0)
     model.write_dict_to_summary("simulation-parameters", sim_params, 0)
 
-    episode_idx = model.get_episode_idx()
+    episode_idx = model.get_episode_idx()+1
     simulation.episodio_atual = int(episode_idx/num_training)
 
     '''
@@ -163,9 +163,23 @@ def train(hyper_params, sim_params, simulation, top_view):  # start_carla=True
     # Faz a leitura da hora que terminou o último treinamento pra contabilizar o tempo total
     if os.path.exists(os.path.join(model.model_dir, "training_log.csv")) and restart == False:
         csv_file = open(os.path.join(model.model_dir, "training_log.csv"), "r")
-        data = [line.strip().split(';')[3] for line in csv_file.readlines()]
-        #simulation.sim_last_total_time = 0
-        simulation.sim_last_total_time = int(data[-1])
+        try:
+            data = [line.strip().split(';') for line in csv_file.readlines()]
+            #simulation.sim_last_total_time = 0
+            simulation.sim_last_total_time = int(data[-1][3])
+            if map == "Gradual_Random":
+                # último episódio foi do tipo Gradual Random, continua de onde parou
+                read_current_grad_random = int(data[-1][5])
+                read_init_grad_random = int(data[-1][6])
+                if read_current_grad_random == 999 or read_init_grad_random == 999:
+                    print("Iniciando novo gradual random.")
+                else:
+                    simulation.current_gradual_random_ep = read_current_grad_random
+                    simulation.init_gradual_random_ep = read_init_grad_random
+            #csv_file.close()
+        except:
+            #csv_file.close()
+            simulation.sim_last_total_time = 0
     else:
         simulation.sim_last_total_time = 0  # Log de tempo total de treinamento em CSV
 
@@ -178,21 +192,34 @@ def train(hyper_params, sim_params, simulation, top_view):  # start_carla=True
     csv_writer = csv.writer(csv_file, delimiter=";")
 
     if restart:
-        csv_writer.writerow([str(simulation.episodio_atual), datetime.date(datetime.now()), str(datetime.now().strftime("%H:%M:%S")), simulation.sim_total_time, "Start"])
+        if map == "Gradual_Random":
+            csv_writer.writerow([str(simulation.episodio_atual), datetime.date(datetime.now()),
+                                 str(datetime.now().strftime("%H:%M:%S")), simulation.sim_total_time, "Start",
+                                 simulation.current_gradual_random_ep, simulation.init_gradual_random_ep])
+        else:
+            csv_writer.writerow([str(simulation.episodio_atual), datetime.date(datetime.now()),
+                                 str(datetime.now().strftime("%H:%M:%S")), simulation.sim_total_time, "Start", 999, 999])
     else:
-        csv_writer.writerow([str(simulation.episodio_atual), datetime.date(datetime.now()), str(datetime.now().strftime("%H:%M:%S")), simulation.sim_total_time, "Continue"])
+        if map == "Gradual_Random":
+            csv_writer.writerow([str(simulation.episodio_atual), datetime.date(datetime.now()),
+                                 str(datetime.now().strftime("%H:%M:%S")), simulation.sim_total_time, "Continue",
+                                 simulation.current_gradual_random_ep, simulation.init_gradual_random_ep])
+        else:
+            csv_writer.writerow([str(simulation.episodio_atual), datetime.date(datetime.now()),
+                                 str(datetime.now().strftime("%H:%M:%S")), simulation.sim_total_time, "Continue", 999, 999])
 
     # eval_cont = 0 # conta se chegou no reward desejado N evaluations
 
     # For every episode
     #while num_episodes <= 0 or model.get_episode_idx() < num_episodes:
     while num_episodes <= 0 or simulation.episodio_atual < num_episodes:
-        episode_idx = model.get_episode_idx()
-        simulation.episodio_atual = int(episode_idx/num_training)
 
         # Espera simulação ser carregada para começar o treinamento
         while not simulation.simulation_status == "Ready":
             time.sleep(0.01)
+
+        episode_idx = model.get_episode_idx() + 1
+        simulation.episodio_atual = int(episode_idx / num_training)
 
         # Sinaliza começo do treinamento
         simulation.simulation_status = "Training"
@@ -200,6 +227,10 @@ def train(hyper_params, sim_params, simulation, top_view):  # start_carla=True
 
         # Run evaluation periodically
         if simulation.episodio_atual % eval_interval == 0 and simulation.episodio_atual != 0 and First_Episode == False:
+
+            # Indica para o módulo top-view que está acontecendo a fase de evaluation
+            simulation.eval = True
+
             video_filename = os.path.join(model.video_dir, "episode{}.avi".format(simulation.episodio_atual))
             eval_reward = run_eval(env, model, video_filename, eval_time, simulation, ego_num)
             model.write_value_to_summary("eval/reward", eval_reward, simulation.episodio_atual)
@@ -216,8 +247,13 @@ def train(hyper_params, sim_params, simulation, top_view):  # start_carla=True
             else:
                 csv_writer.writerow([str(simulation.episodio_atual), datetime.date(datetime.now()), datetime.now().strftime("%H:%M:%S"), "Evaluation"])
             """
-            csv_writer.writerow(
-                [str(simulation.episodio_atual), datetime.date(datetime.now()), datetime.now().strftime("%H:%M:%S"), simulation.sim_total_time, "Evaluation"])
+            if map == "Gradual_Random":
+                csv_writer.writerow([str(simulation.episodio_atual), datetime.date(datetime.now()),
+                                     datetime.now().strftime("%H:%M:%S"), simulation.sim_total_time, "Evaluation",
+                                     simulation.current_gradual_random_ep, simulation.init_gradual_random_ep])
+            else:
+                csv_writer.writerow([str(simulation.episodio_atual), datetime.date(datetime.now()),
+                                     datetime.now().strftime("%H:%M:%S"), simulation.sim_total_time, "Evaluation", 999, 999])
 
             # salva a cada evaluation interval ou se melhor reward for atingido
             #if eval_reward > best_eval_reward or episode_idx % (eval_interval*save_eval_interval):
@@ -230,8 +266,16 @@ def train(hyper_params, sim_params, simulation, top_view):  # start_carla=True
             time_raw = simulation.sim_total_time
             sim_time_now = '{:02}_{:02}_{:02}'.format(time_raw // 3600, time_raw % 3600 // 60, time_raw % 60)
             model.save(simulation.episodio_atual, reason, sim_time_now)
-            csv_writer.writerow([str(simulation.episodio_atual), datetime.date(datetime.now()), datetime.now().strftime("%H:%M:%S"), simulation.sim_total_time, reason])
-
+            if map == "Gradual_Random":
+                csv_writer.writerow([str(simulation.episodio_atual), datetime.date(datetime.now()),
+                                     datetime.now().strftime("%H:%M:%S"), simulation.sim_total_time, reason,
+                                     simulation.current_gradual_random_ep, simulation.init_gradual_random_ep])
+            else:
+                csv_writer.writerow(
+                    [str(simulation.episodio_atual), datetime.date(datetime.now()), datetime.now().strftime("%H:%M:%S"),
+                     simulation.sim_total_time, reason, 999, 999])
+            # Indica para o módulo top-view que finalizou a fase de evaluation
+            simulation.eval = False
         # Reset environment
         state, terminal_state, total_reward = env.reset()
 
@@ -240,7 +284,7 @@ def train(hyper_params, sim_params, simulation, top_view):  # start_carla=True
 
         #while not terminal_state:
         for idx_training in range(num_training):
-            episode_idx = model.get_episode_idx()
+            episode_idx = model.get_episode_idx()+1
             First_Episode = False  # variável usado para evitar gravação de modelo à toa
             simulation.training_atual = idx_training
             states, taken_actions, values, rewards, dones = [], [], [], [], []
@@ -359,7 +403,13 @@ def train(hyper_params, sim_params, simulation, top_view):  # start_carla=True
             model.write_value_to_summary("train/distance", env.distance, episode_idx)
             model.write_episodic_summaries()
 
-            csv_writer.writerow([str(simulation.episodio_atual), datetime.date(datetime.now()), datetime.now().strftime("%H:%M:%S"), simulation.sim_total_time, "Episode"])
+            if map == "Gradual_Random":
+                csv_writer.writerow([str(simulation.episodio_atual), datetime.date(datetime.now()),
+                                     datetime.now().strftime("%H:%M:%S"), simulation.sim_total_time, "Episode",
+                                     simulation.current_gradual_random_ep, simulation.init_gradual_random_ep])
+            else:
+                csv_writer.writerow([str(simulation.episodio_atual), datetime.date(datetime.now()),
+                                     datetime.now().strftime("%H:%M:%S"), simulation.sim_total_time, "Episode", 999, 999])
 
             # Finaliza simulação baseado no valor desejado de desvio padrão
             print(model.current_std)
@@ -376,8 +426,13 @@ def train(hyper_params, sim_params, simulation, top_view):  # start_carla=True
     time_raw = simulation.sim_total_time
     sim_time_now = '{:02}_{:02}_{:02}'.format(time_raw // 3600, time_raw % 3600 // 60, time_raw % 60)
     model.save(simulation.episodio_atual, "closing", sim_time_now)
-    csv_writer.writerow(
-        [str(simulation.episodio_atual), datetime.date(datetime.now()), datetime.now().strftime("%H:%M:%S"), simulation.sim_total_time, "Closing"])
+    if map == "Gradual_Random":
+        csv_writer.writerow([str(simulation.episodio_atual), datetime.date(datetime.now()),
+                             datetime.now().strftime("%H:%M:%S"), simulation.sim_total_time, "Closing",
+                             simulation.current_gradual_random_ep, simulation.init_gradual_random_ep])
+    else:
+        csv_writer.writerow([str(simulation.episodio_atual), datetime.date(datetime.now()),
+                             datetime.now().strftime("%H:%M:%S"), simulation.sim_total_time, "Closing", 999, 999])
 
     # Fecha arquivo de evaluations
     csv_file.close()

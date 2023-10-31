@@ -46,9 +46,11 @@ def play(hyper_params, sim_params, simulation, top_view):  # start_carla=True
     # reset_mode       = params["reset_mode"]
     train_model = sim_params["TRAIN_MODEL"]
     # target_std = hyper_params["target_std"]
-    # map = sim_params["MAP"]
+    map = sim_params["MAP"]
+    record_play_stats = sim_params["RECORD_PLAY_STATS"]
     # last_positions_training = sim_params["LAST_POSITIONS_TRAINING"]
     eval_time        = 999999999  # roda por tempo indefinido até ESC ser pressionado
+    simulation.eval = True
 
     # Set seeds
     if isinstance(seed, int):
@@ -66,7 +68,8 @@ def play(hyper_params, sim_params, simulation, top_view):  # start_carla=True
                    fps=fps,
                    #start_carla=start_carla
                    simulation=simulation, top_view=top_view,
-                   ego_num=ego_num)
+                   ego_num=ego_num,
+                   map=map)
 
     if isinstance(seed, int):
         env.seed(seed)
@@ -97,8 +100,8 @@ def play(hyper_params, sim_params, simulation, top_view):  # start_carla=True
     print("Rodando em modo PREVIEW com modelo: \"{}\".".format(model_name))
 
     simulation.simulation_status = "Play"
-
-    run_eval(env, model, None, eval_time, simulation, ego_num)
+    play = True
+    run_eval(env, model, None, eval_time, simulation, ego_num, play, record_play_stats)
 
     #eval_reward = run_eval(env, model, eval_time=eval_time)
     #print("Reward final: ", eval_reward)

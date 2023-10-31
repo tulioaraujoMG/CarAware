@@ -94,7 +94,9 @@ def rw_distance(env):
     reward_lst = []
     distance_lst = []
 
+    errors = 0
     try:
+
         for vehicle_pred, vehicle_gt in zip(env._simulation.ego_vehicle, env._top_view.world.gt_input_ego):
 
             distance = np.sqrt((vehicle_pred.prediction[0] - vehicle_gt.x) ** 2 + (
@@ -103,11 +105,13 @@ def rw_distance(env):
             reward = 308 / (distance + 1)  # 308 é a distância máxima de canto a canto do mapa -> sqrt((210+15)^2+(100-310)^2)
             reward_lst.append(reward)
             distance_lst.append(distance)
-    except:
-        reward_lst.append(0)
-        distance_lst.append(0)
 
-    total_reward = sum(reward_lst)/env.ego_num
+    except:
+        errors += 1
+    #    reward_lst.append(0)
+    #    distance_lst.append(0)
+
+    total_reward = sum(reward_lst)/(env.ego_num-errors)
     return total_reward, distance_lst
 
 def rw_exponential_distance_normalized(env, veh, veh_num):

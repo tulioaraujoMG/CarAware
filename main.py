@@ -46,11 +46,14 @@ SIM_PARAMS = {}
 
 # ========== CONFIG DOS EPISÓDIOS DE SIMULAÇÃO ===========
 SIM_PARAMS["EPISODE_RESET"] = True  # Se True, faz o respawn aleatório a cada novo episódio
+SIM_PARAMS["RESET_INTERVAL"] = 3  # Define qual número e episódios serão rodados até realizar o reset
+SIM_PARAMS["CENTRALIZED_SPAWN"] = False  # Se True, força o spawn a acontecer no centro do mapa (Funciona apenas com Town02)
 SIM_PARAMS["SENSORS_BLACKOUT"] = False  # Se True, falha os sensores a cada X segundos, por Y segundos.
 SIM_PARAMS["MAP"] = "Town02"  # Mapa que será carregado na simulação. Ex.: Town01,Town02,Town10HD_Opt (só com ep. reset), Random,Gradual_Random
-SIM_PARAMS["RANDOM_MAPS"] = ["Town02", "Town10HD_Opt"]  # Mapas que serão selecionados randomicamente se MAP = "Random" ou "Gradual_Random"
-SIM_PARAMS["GRADUAL_RANDOM_INIT_EP_CHANGE"] = 100  # Número de episódios que irá rodar no início, antes de trocar o mapa
-SIM_PARAMS["GRADUAL_RANDOM_RATE"] = 5  # Tamanho do passo de redução do número de episódios que irá rodar antes de trocar o mapa
+SIM_PARAMS["RANDOM_MAPS"] = ["Town02", "Town01"]  # Mapas que serão selecionados randomicamente se MAP = "Random" ou "Gradual_Random"
+SIM_PARAMS["GRADUAL_RANDOM_INIT_EP_CHANGE"] = 50  # Número de episódios que irá rodar no início, antes de trocar o mapa
+SIM_PARAMS["GRADUAL_RANDOM_RATE"] = 0  # Tamanho do passo de redução do número de episódios que irá rodar antes de trocar o mapa
+SIM_PARAMS["KALMAN_FILTER"] = True  # Generates kalman filter outputs to compare with the prediction, during "Play" and evaluation in "Training"
 SIM_PARAMS["NUM_EPISODES"] = int(0)  # total de episódios que serão rodados (0 or less trains forever)
 SIM_PARAMS["EGO_VEHICLE_NUM"] = 1 # Número de Ego vehicles gerados na simulação
 SIM_PARAMS["NPC_VEHICLE_NUM"] = 0  # Número de NPC vehicles gerados na simulação
@@ -60,9 +63,9 @@ SIM_PARAMS["PERCENTAGE_PEDESTRIANS_RUNNING"] = 0.0  # how many pedestrians will 
 SIM_PARAMS["PERCENTAGE_PEDESTRIANS_CROSSING"] = 0.0  # how many pedestrians will walk through the road
 # Define o comportamento da direção automática dos carros
 SIM_PARAMS["VEHICLE_AGENT"] = "BEHAVIOR"  # Tipo de agente usado no controle dos veículos simulados - Opções: "BEHAVIOR", "BASIC", "SERVER", "STOP"
-SIM_PARAMS["VEHICLE_BEHAVIOR"] = "randomized"  # Opções do modo BEHAVIOR: "cautious", "normal", "aggressive", "randomized"
+SIM_PARAMS["VEHICLE_BEHAVIOR"] = "cautious"  # Opções do modo BEHAVIOR: "cautious", "normal", "aggressive", "randomized"
 SIM_PARAMS["VEHICLE_DISTANCE"] = 3.0  # Distância de segurança entre veículos, para não baterem
-SIM_PARAMS["VEHICLE_SPEED"] = 30  # Define velocidade fixa dos veículos (numeral 0-100) ou se seguem o limite (string "Limit")
+SIM_PARAMS["VEHICLE_SPEED"] = "Limit"  # Define velocidade fixa dos veículos (numeral 0-100) ou se seguem o limite (string "Limit")
 SIM_PARAMS["NUM_MIN_WAYPOINTS"] = 20  # Número mínimo de waypoints de destino, caso sejam utilizados (modo behavior)
 #OBS: Modo SERVER pesa no servidor, modo BASIC pesa no cliente
 
@@ -88,15 +91,15 @@ SIM_PARAMS["DEBUG"] = True  # Habilita exibição de informações de sensores n
 SIM_PARAMS["SCREEN_WIDTH"] = 1920  # 1920
 SIM_PARAMS["SCREEN_HEIGHT"] = 1020  # 1080
 SIM_PARAMS["CONFIG_FPS"] = 30  # Set this to the FPS of the environment
-SIM_PARAMS["KALMAN_FILTER"] = False  # Generates kalman filter outputs to compare with the prediction
 
 # ======================== CONFIG DO REINFORCEMENT LEARNING ===========================
-SIM_PARAMS["TRAIN_MODE"] = "Play"  # Define o modo de execução do RL: "Train", "Play" ou "Simulation"
+SIM_PARAMS["TRAIN_MODE"] = "Train"  # Define o modo de execução do RL: "Train", "Play" ou "Simulation"
 SIM_PARAMS["TRAIN_MODEL"] = "Latest"  # "Latest" ou "Nome do modelo" a ser utilizado.
 SIM_PARAMS["TRAIN_RESTART"] = False  # Se True, sobrescreve o modelo criado previamente, em False, continua treinamento
 SIM_PARAMS["PREDICTION_PREVIEW"] = True  # Se True, desenha a previsão na visão Top-view
 SIM_PARAMS["PREDICTION_HUD"] = True  # Se True, insere informações de prediction no HUD
 SIM_PARAMS["LAST_POSITIONS_TRAINING"] = False  # Se True, passa as últimas 4 posições para a rede no treinamento
+SIM_PARAMS["RECORD_PLAY_STATS"] = False  # Se True, grava no Tensorboard as distâncias prediction e kalman
 
 #  Melhores modelos:
 #  PPO_MODEL_moving_restart_multi_agent_rw_distance_normalized_step3_v1:
@@ -104,12 +107,12 @@ SIM_PARAMS["LAST_POSITIONS_TRAINING"] = False  # Se True, passa as últimas 4 po
 
 # ============================= HYPER PARAMETERS ========================================
 HYPER_PARAMS = {}
-HYPER_PARAMS["learning_rate"] = float(1e-4)  # Initial learning rate - Default: 1e-4 (funcionou) / 5e-4 (ruim) / 8e-5 (devagar) - Erros: 1e-3 gera NaN de output, pesos da NN tendem a infinito
+HYPER_PARAMS["learning_rate"] = float(8e-5)  # Initial learning rate - Default: 1e-4 (funcionou) / 5e-4 (ruim) / 8e-5 (devagar) - Erros: 1e-3 gera NaN de output, pesos da NN tendem a infinito
 HYPER_PARAMS["lr_decay"] = float(1.0)  # Per-episode exponential learning rate decay - Default: 1.0 (mantêm constante)
 HYPER_PARAMS["discount_factor"] = float(0.99)  # GAE discount factor
 HYPER_PARAMS["gae_lambda"] = float(0.95)  # GAE lambda
 HYPER_PARAMS["ppo_epsilon"] = float(0.2)  # PPO Epsilon - Default: 0.2
-HYPER_PARAMS["initial_std"] = float(1.0)  # Initial value of the std used in the gaussian policy - Default: 1.0 (funcionou)
+HYPER_PARAMS["initial_std"] = float(0.7)  # Initial value of the std used in the gaussian policy - Default: 1.0 (funcionou) / 0.7 (melhor)
 HYPER_PARAMS["target_std"] = int(0.4)  # Target de desvio padrão, utilizado para finalizar treinamento quando atingido - NÃO ESTÁ FUNCIONANDO
 HYPER_PARAMS["value_scale"] = float(1.0)  # Value loss scale factor
 HYPER_PARAMS["entropy_scale"] = float(0.01)  # Entropy loss scale factor - Default: 0.01
@@ -119,15 +122,15 @@ HYPER_PARAMS["num_epochs"] = int(4)  # Number of PPO training epochs per traning
 HYPER_PARAMS["batch_size"] = int(2048)  # Epoch batch size - Default: 32 / 2048 (funcionou) / 8192
 HYPER_PARAMS["synchronous"] = False  # Set this to True when running in a synchronous environment
 HYPER_PARAMS["action_smoothing"] = float(0.0)  #Action smoothing factor
-HYPER_PARAMS["model_name"] = "Scenario1play"  # Name of the model to train. Output written to models/model_name
+HYPER_PARAMS["model_name"] = "PPO_MODEL_step10_moving_1agent_reset3_Town02_distnorm_noblackout_highstd_h32768_batch2048_lr8e5_epoch4_v3"  # Name of the model to train. Output written to models/model_name
 HYPER_PARAMS["reward_fn"] = "rw_distance_normalized"  # Reward Function to use. See reward_functions.py for more info.
 HYPER_PARAMS["seed"] = 0  # Seed to use. (Note that determinism unfortunately appears to not be guaranteed
                         # with this option in our experience)
 HYPER_PARAMS["eval_interval"] = int(10)  # Number of episodes interval between evaluations - Default: 5
 #HYPER_PARAMS["save_eval_interval"] = int(10)  # Number of evaluations interval for saving (in addition to best rw)
-HYPER_PARAMS["eval_time"] = int(30)  # Tempo que a simulação irá rodar para avaliação - Default: 60
+HYPER_PARAMS["eval_time"] = int(40)  # Tempo que a simulação irá rodar para avaliação - Default: 60
 HYPER_PARAMS["record_eval"] = True  # If True, save' videos of evaluation episodes to models/model_name/videos/
-# HYPER_PARAMS["reset_mode"] = RESET_MODE  # Usado em conjunto com restart, define se reinicia sempre ou só target
+# HYPER_PARAMS["reset_mode"] = RESET_MODE  5# Usado em conjunto com restart, define se reinicia sempre ou só target
 
 # =========== CONFIGURAÇÃO DOS SENSORES ( HABILITAÇÃO É True ou False) ============================
 SENS_PARAMS = {}
@@ -144,7 +147,7 @@ SENS_PARAMS["SENS_SPD_SAS_BLACKOUT_INTERVAL_MAX"] = 10
 # GLOBAL NAVIGATION SATELLITE SYSTEM (GNSS)
 SENS_PARAMS["SENS_GNSS"] = True
 SENS_PARAMS["SENS_GNSS_PREVIEW"] = True  # Define se os pontos detectados serão desenhados na tela
-SENS_PARAMS["SENS_GNSS_SAMPLING"] = 0.1  # tempo em segundos entre cada aquisição
+SENS_PARAMS["SENS_GNSS_SAMPLING"] = 0.1 # tempo em segundos entre cada aquisição - Default: 0.1 / Real: 1
 SENS_PARAMS["SENS_GNSS_ERROR"] = 0.00005  # Default: Low = 0.00001 / High = 0.0001
 SENS_PARAMS["SENS_GNSS_BIAS"] = 0.0
 SENS_PARAMS["SENS_GNSS_BLACKOUT_ON"] = True  # Habilita/desabilita blackout desse sensor
@@ -155,7 +158,7 @@ SENS_PARAMS["SENS_GNSS_BLACKOUT_INTERVAL_MAX"] = 10
 
 # INERTIAL MEASUREMENT UNIT (IMU)
 SENS_PARAMS["SENS_IMU"] = True
-SENS_PARAMS["SENS_IMU_SAMPLING"] = 0.1  # tempo em segundos entre cada aquisição
+SENS_PARAMS["SENS_IMU_SAMPLING"] = 0.1  # tempo em segundos entre cada aquisição - Default: 0.1 / Real: 0.01
 SENS_PARAMS["SENS_IMU_ACCEL_ERROR"] = 0.001  # Default: 0.00001
 SENS_PARAMS["SENS_IMU_GYRO_ERROR"] = 0.001  # Default: 0.00001
 SENS_PARAMS["SENS_IMU_GYRO_BIAS"] = 0.0
@@ -165,8 +168,8 @@ SENS_PARAMS["SENS_IMU_BLACKOUT_MAX"] = 10
 SENS_PARAMS["SENS_IMU_BLACKOUT_INTERVAL_MIN"] = 5  # Tempo em segundos do intervalo de blackout
 SENS_PARAMS["SENS_IMU_BLACKOUT_INTERVAL_MAX"] = 10
 
-# COLLISION DETECTION (COL)
-SENS_PARAMS["SENS_COL"] = False
+# COLLISION DETECTION (COL)  # Resets the episode if there is a collision and the vehicle stops
+SENS_PARAMS["SENS_COL"] = True
 
 # OBSTACLE DETECTION (OBS)
 SENS_PARAMS["SENS_OBS"] = False
@@ -252,16 +255,22 @@ def main():
     SENS_LIDAR = SENS_PARAMS["SENS_LIDAR"]
     SENS_RGB_PREVIEW = SENS_PARAMS["SENS_RGB_PREVIEW"]
 
+    KALMAN_FILTER = SIM_PARAMS["KALMAN_FILTER"]
+
+    RESET_INTERVAL = SIM_PARAMS["RESET_INTERVAL"]
+
     # INICIALIZA AS CLASSES DA SIMULAÇÃO
     sim = simulation.SimulationSetup(SIM_PARAMS, SENS_PARAMS)  # Classe com setup da simulação
     sim.simulation_status = "Loading"  # Informa que a simulação está sendo carregada
 
     sim_pause = simulation.SimPause()  # Classe que pausa/resume a simulação
     sim_pause.start(sim)
-    sim_pause.pause()  # pausa a simulação para configuração do primeiro episódio
+    sim_pause.pause(sim)  # pausa a simulação para configuração do primeiro episódio
 
     top_view = simulation.TopView(SIM_PARAMS)  # Classe que abre a janela de Top View
-    if MAP != ("Random" or "Gradual_Random"):
+    if MAP == "Random" or MAP == "Gradual_Random":
+        top_view.start(sim.chosen_random_map)
+    else:
         top_view.start(MAP)
     #top_view.start()
 
@@ -275,11 +284,13 @@ def main():
     if TRAIN_MODE == "Simulation":
         sim.simulation_status = "Simulation"
 
+    time.sleep(5)
+
     # PREENCHE STRING SENSORES COM OS QUE ESTÃO HABILITADOS P/ MOSTRAR NO HUD
     sensores = ""
     sensores += "GNSS " if SENS_GNSS else ""
     sensores += "IMU " if SENS_IMU else ""
-    sensores += "SPD/SAS" if SENS_SPD_SAS else ""
+    sensores += "SPD/SAS " if SENS_SPD_SAS else ""
     sensores += "OBS " if SENS_OBS else ""
     sensores += "COL " if SENS_COL else ""
     sensores += "RGB " if SENS_RGB else ""
@@ -295,9 +306,6 @@ def main():
         sim.new_episode = True
         #simulation.episodio_atual +=1
 
-        # Inicia exibição de dados do mapa selecionado na tela de top-view
-        if MAP == "Random" or MAP == "Gradual_Random":
-            top_view.start(sim.chosen_random_map)
         #else:
         #    top_view.start(MAP)
 
@@ -310,12 +318,13 @@ def main():
         # INICIALIZA O EPISÓDIO "EPISODE_NUM"
         # registra os eventos em formato de log
         print("\n======= Iniciando episódio", sim.episodio_atual, "DE", num_episodes, "=======\n")
-        if MAP == "Random":
+        if MAP == "Random" or MAP == "Gradual_Random":
             print("Mapa selecionado: ", sim.chosen_random_map)
 
         # CARREGA PEDESTRES, VEÍCULOS E OBJETOS
-        if EPISODE_RESET or First_episode == True or sim.simulation_reset == True:
+        if (EPISODE_RESET and sim.episodio_atual % RESET_INTERVAL == 0 and sim.episodio_atual != 0) or First_episode == True or sim.simulation_reset == True:
             sim.spawn_all()
+            sim.simulation_reset = False
             First_episode = False
 
         # CONFIGURA O EXPECTADOR PARA VISÃO DE CIMA NO SERVIDOR
@@ -331,7 +340,7 @@ def main():
             # registra os eventos em formato de log
             print("\nEpisódio Iniciado - Rodando por", str(HYPER_PARAMS["horizon"]), "horizontes")
 
-        sim_pause.resume()  # RESUME A SIMULAÇÃO APÓS A CONFIGURAÇÃO
+        sim_pause.resume(sim, SIM_PARAMS)  # RESUME A SIMULAÇÃO APÓS A CONFIGURAÇÃO
 
         # Game loop
         ep_start_time = time.time()
@@ -349,6 +358,11 @@ def main():
             if sim.simulation_status == "Simulation" and top_view.input_control.quit :
                 sim.simulation_status = "Complete"
                 break
+
+            if KALMAN_FILTER: #and sim.eval:
+                top_view.world.kalman_filter = True
+            else:
+                top_view.world.kalman_filter = False
 
             #top_view.world.ground_truth()  # gera os dados de GT para o RL
             hud_txt = []
@@ -449,12 +463,22 @@ def main():
                     hud_txt.append(car_info)
             top_view.tick(hud_txt, sim.ego_vehicle)  # atualiza a exibição do top-view
 
-        sim_pause.pause()  # PAUSA A SIMULAÇÃO PARA CONFIGURAR O EPISÓDIO
+        sim_pause.pause(sim)  # PAUSA A SIMULAÇÃO PARA CONFIGURAR O EPISÓDIO
 
-        if EPISODE_RESET or sim.simulation_reset == True:
+        if MAP == "Gradual_Random":
+            sim.current_gradual_random_ep = sim.current_gradual_random_ep - 1
+            print(sim.current_gradual_random_ep)
+            if sim.current_gradual_random_ep <= 0:
+                sim.simulation_reset = True
+                #top_view.start(sim.chosen_random_map)
+
+        if (EPISODE_RESET and sim.episodio_atual % RESET_INTERVAL == 0 and sim.episodio_atual != 0) or sim.simulation_reset == True:
             sim.reset()
-            sim.simulation_reset = False
+            # Inicia exibição de dados do mapa selecionado na tela de top-view
             num_restarts += 1
+            if MAP == "Random" or MAP == "Gradual_Random":
+                top_view.start(sim.chosen_random_map)
+
 
         if sim.simulation_status != "Complete":
             sim.simulation_status = "Loading"  # Segura o treinamento enquanto a simulação reinicia
