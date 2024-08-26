@@ -3,8 +3,7 @@ A Deep Reinforcement Learning Platform for Multiple Autonomous Vehicles Based on
 
 To facilitate studies in Deep Reinforcement Learning (DRL) and autonomous vehicles, we present the CarAware framework for detailed multi-agent vehicle simulations, which works together with the open-source traffic simulator CARLA. This framework aims to fill the gap identified in currently available CARLA DRL frameworks, often focused on the perception and control of a single vehicle. The new framework provides baselines for training DRL agents in scenarios with multiple connected autonomous vehicles (CAVs), focusing on their sensors' data fusion for objects' localization and identification. These features and tools allow studying many different DRL strategies and algorithms, applied for multi-vehicle sensors' data fusion and interpretation.
 
-A paper describing this framework was submitted to MT-ITS 2023 - 8th International Conference on Models and Technologies for Intelligent Transportation Systems.
-After publication, the link to the paper will be available HERE.
+A paper describing this framework was published in MT-ITS 2023 - 8th International Conference on Models and Technologies for Intelligent Transportation Systems: https://ieeexplore.ieee.org/document/10241376.
 
 # Main Necessary Softwares and Python Libraries
 The following software packages/python libraries need to be installed for this framework to work properly:
