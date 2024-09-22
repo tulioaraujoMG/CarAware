@@ -5,6 +5,9 @@ To facilitate studies in Deep Reinforcement Learning (DRL) and autonomous vehicl
 
 A paper describing this framework was published in MT-ITS 2023 - 8th International Conference on Models and Technologies for Intelligent Transportation Systems: https://ieeexplore.ieee.org/document/10241376.
 
+For more information, please see the presentations and dissertation in the References folder. They were part of my Master Degree final work, the reason for this framework creation.
+Also, for the presentation recording, please access (in portuguese) - https://youtu.be/y8ONMofSPLE
+
 # Main Necessary Softwares and Python Libraries
 The following software packages/python libraries need to be installed for this framework to work properly:
 
@@ -32,11 +35,11 @@ Some known bugs are present in the initial version of the framework:
 # Future Improvements
 Other implementations could also be performed in the CarAware framework, to improve its simulation capabilities and deliver better training strategies:
 
-•	Implement CARLA's synchronous mode support in the framework, useful in the high-processing demanding simulation scenarios. This could also be used to speed-up the simulation, with environments that could run faster than real-time;
-•	Implement asynchronous training capabilities in the framework, enabling the simulation of multiple environments, with the possibility of distributed learning over the network for DRL algorithms that are compatible with this feature, like PPO;
-•	Implement configurable scenario setup via the top-view window, selecting with mouse clicks the spawn points of each object and their target waypoints, which could enable a better exploration of all maps' regions;
-•	Implement a flexible curriculum configuration tool, to create more dynamic curricula, to increase the simulations' randomness in a single episode (which prevents biasing), like dynamic number of vehicles and paths taken, random sensors' blackout, variable sensors' noise, to name a few. Automatic curricula algorithms could also be applied;
-•	Implement the structure for other DRL algorithms, like DQN, A2C, A3C, DDPG, and TRPO;
-•	Implement other hybrid learning algorithms, that mix DRL with other techniques like imitation learning or genetic algorithms, which present improved results compared to pure DRL algorithms.
-•	Implement the interface for other Deep Learning algorithms, focused on sensor fusion studies;
-•	Implement a "hero" vehicle option, a vehicle that is completely controlled by the user's script based on its own sensors.
+- Implement CARLA's synchronous mode support in the framework, useful in the high-processing demanding simulation scenarios. This could also be used to speed-up the simulation, with environments that could run faster than real-time;
+- Implement asynchronous training capabilities in the framework, enabling the simulation of multiple environments, with the possibility of distributed learning over the network for DRL algorithms that are compatible with this feature, like PPO;
+- Implement configurable scenario setup via the top-view window, selecting with mouse clicks the spawn points of each object and their target waypoints, which could enable a better exploration of all maps' regions;
+- Implement a flexible curriculum configuration tool, to create more dynamic curricula, to increase the simulations' randomness in a single episode (which prevents biasing), like dynamic number of vehicles and paths taken, random sensors' blackout, variable sensors' noise, to name a few. Automatic curricula algorithms could also be applied;
+- Implement the structure for other DRL algorithms, like DQN, A2C, A3C, DDPG, and TRPO;
+- Implement other hybrid learning algorithms, that mix DRL with other techniques like imitation learning or genetic algorithms, which present improved results compared to pure DRL algorithms.
+- Implement the interface for other Deep Learning algorithms, focused on sensor fusion studies;
+- Implement a "hero" vehicle option, a vehicle that is completely controlled by the user's script based on its own sensors.
