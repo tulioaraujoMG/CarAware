@@ -8,7 +8,7 @@ To facilitate studies in Deep Reinforcement Learning (DRL) and autonomous vehicl
 A paper describing this framework was published in MT-ITS 2023 - 8th International Conference on Models and Technologies for Intelligent Transportation Systems: https://ieeexplore.ieee.org/document/10241376.
 
 For more information, please see the presentations and dissertation in the References folder. They were part of my Master Degree final work, the reason for this framework creation.
-Also, for the presentation recording, please access (in portuguese) - https://youtu.be/y8ONMofSPLE
+Also, for the presentation recording, please access (in portuguese) - https://youtu.be/y8ONMofSPLE.
 
 PPO training setup implemented using the framework, for the case study performed in the master research (more details in the presentation and dissertation):
 
