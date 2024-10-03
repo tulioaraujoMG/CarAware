@@ -10,7 +10,7 @@ A paper describing this framework was published in MT-ITS 2023 - 8th Internation
 For more information, please see the presentations and dissertation in the References folder. They were part of my Master Degree final work, the reason for this framework creation.
 Also, for the presentation recording, please access (in portuguese) - https://youtu.be/y8ONMofSPLE
 
-PPO training setup implemented using the framework, in the case study performed in the master research (more details in the presentation and dissertation):
+PPO training setup implemented using the framework, for the case study performed in the master research (more details in the presentation and dissertation):
 
 ![image](https://github.com/user-attachments/assets/7ce81925-cb9c-443e-a61c-1e3cb8c5f606)
 
